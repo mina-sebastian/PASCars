@@ -49,7 +49,7 @@ public class ManualCarController : MonoBehaviour
     private void ApplySteering()
     {
         float currentSpeed = rb.linearVelocity.magnitude;
-        float speedFactor = Mathf.Clamp01(currentSpeed / 10f); // The lower the speed, the less steering
+        float speedFactor = Mathf.Clamp01(currentSpeed / 10f);
 
         float steerAngle = steerInput * maxSteerAngle * speedFactor;
         Quaternion steerRotation = Quaternion.Euler(0f, steerAngle * Time.fixedDeltaTime, 0f);

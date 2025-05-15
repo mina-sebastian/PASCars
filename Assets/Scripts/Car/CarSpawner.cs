@@ -24,11 +24,7 @@ public class CarSpawner : MonoBehaviour
         GameObject carObj = Instantiate(carPrefab, spawnPosition, Quaternion.LookRotation(spawnForward, Vector3.up));
 
         // Setup CarAgent
-        var agent = carObj.GetComponent<CCarAgent>();
-        if (agent != null)
-        {
-            agent.desiredForward = spawnForward;
-        }
+        var agent = carObj.GetComponent<CarAgent>();
 
         // Setup RoadSystemNavigator
         var navigator = carObj.GetComponent<RoadSystemNavigator>();
