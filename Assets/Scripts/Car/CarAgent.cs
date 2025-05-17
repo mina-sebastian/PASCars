@@ -46,7 +46,6 @@ public class CarAgent : Agent
         transform.localPosition = new Vector3(-83.15f, 0.67f, 23.6f);
         transform.rotation = Quaternion.identity;
 
-        navigator.Goal = new Vector3(100, 0, 100); // or auto-select valid goal
         navigator.CalculateWayPointsSync();
 
         // Try waiting manually for CurrentPoints
@@ -100,7 +99,7 @@ public class CarAgent : Agent
             sensor.AddObservation(localVelocity.z / maxSpeed);
 
             // Add direction to lookahead waypoints (1–3 ahead)
-            int wpCount = Mathf.Min(4, navigator.CurrentPoints.Count);
+            int wpCount = Mathf.Min(6, navigator.CurrentPoints.Count);
             for (int i = 1; i < wpCount; i++)
             {
                 Vector3 toNext = (navigator.CurrentPoints[i].position - transform.position).normalized;
@@ -152,6 +151,11 @@ public class CarAgent : Agent
         float closestDist = Vector3.Distance(_currentWaypoint, rb.position) / maxDistanceFromRoad;
 
         RepositionCurrentPositionIndex(closestDist);
+
+        Vector3 dirToWaypoint = (_currentWaypoint - transform.position).normalized;
+        float alignment = Vector3.Dot(transform.forward, dirToWaypoint);
+        AddReward(0.0005f * alignment);  // Soft reward
+
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -182,7 +186,7 @@ public class CarAgent : Agent
     private void ApplySteering(float steerInput)
     {
         float currentSpeed = rb.linearVelocity.magnitude;
-        float speedFactor = Mathf.Clamp01(currentSpeed / 10f);
+        float speedFactor = Mathf.Clamp(currentSpeed / 10f, 0.3f, 1f);
 
         float steerAngle = steerInput * maxSteerAngle * speedFactor;
         Quaternion steerRotation = Quaternion.Euler(0f, steerAngle * Time.fixedDeltaTime, 0f);
@@ -194,6 +198,13 @@ public class CarAgent : Agent
     private void RepositionCurrentPositionIndex(float closestDist)
     {
         if (_fixedPath.Count == 0) return;
+
+        if(_previousPathIndex >= _fixedPath.Count - 10)
+        {
+            AddReward(10);
+            EndEpisode();
+            Debug.LogWarning("WIN");
+        }
 
         if(_speedZero > 40)
         {
